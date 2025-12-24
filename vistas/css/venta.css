@@ -1,0 +1,42 @@
+table#tblarticulos {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+}
+.modal-dialog-venta{
+  width: 90% !important;
+}
+input#impuesto {
+    WIDTH: 70PX;
+    DISPLAY: INLINE-BLOCK;
+}
+ 
+  table#detalles {
+    background: #ffffff;
+}
+table#showQuotations {
+    width: 100% !important;
+}
+input#quotation {
+    display: none;
+}
+  table#detalles {
+    background: #ffffff;
+}
+
+.label-yape {
+    background-color: blue !important;
+    color: white !important;
+}
+.label-plin {
+    background-color: blue !important;
+    color: white !important;
+}
+.label-efectivo {
+    background-color: black !important;
+    color: white !important;
+}
+.label-credito {
+    background-color: red !important;
+    color: white !important;
+}
