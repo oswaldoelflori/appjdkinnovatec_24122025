@@ -95,9 +95,60 @@ switch ($_GET["op"])
                     $articulosVentaDirecta['descuento'],
                     $idcontacto_tabla, $forma_pago,
                     $monto_pagado, $saldo_pendiente, $fecha_vencimiento
-                );
+            );
 
             echo $rspta ? "Venta registrada" : "No se registraron todos los datos de la venta satisfactoriamente";
+        } else {
+            if (empty($idventa)) {
+                echo "ID de venta no válido";
+                break;
+            }
+
+            $detalle = null;
+
+            if (isset($_POST["idarticulo_obtengoDeCotizacion"])) {
+                $detalle = $articulosCotizacion;
+            } elseif (isset($_POST["cantidad"])) {
+                $detalle = $articulosVentaDirecta;
+            }
+
+            if (!$detalle || empty($detalle['ids'])) {
+                echo "No se recibieron productos para actualizar";
+                break;
+            }
+
+            $validaArrays = count($detalle['ids']) === count($detalle['cant'])
+                && count($detalle['ids']) === count($detalle['precio'])
+                && count($detalle['ids']) === count($detalle['descuento']);
+
+            if (!$validaArrays) {
+                echo "Los datos del detalle de la venta son inconsistentes";
+                break;
+            }
+
+            $rspta = $venta->actualizarVenta(
+                $idventa,
+                $idcliente,
+                $idusuario,
+                $tipo_comprobante,
+                $serie_comprobante,
+                $num_comprobante,
+                $fecha_hora,
+                $subtotal,
+                $igv,
+                $total_venta,
+                $detalle['ids'],
+                $detalle['cant'],
+                $detalle['precio'],
+                $detalle['descuento'],
+                $idcontacto_tabla,
+                $forma_pago,
+                $monto_pagado,
+                $saldo_pendiente,
+                $fecha_vencimiento
+            );
+
+            echo $rspta ? "Venta actualizada" : "No se pudo actualizar la venta";
         }
     break;
     
