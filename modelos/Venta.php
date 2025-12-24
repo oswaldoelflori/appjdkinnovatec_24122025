@@ -52,6 +52,127 @@ class Venta
 
     }
 
+    public function actualizarVenta(
+        $idventa,
+        $idcliente,
+        $idusuario,
+        $tipo_comprobante,
+        $serie_comprobante,
+        $num_comprobante,
+        $fecha_hora,
+        $subtotal,
+        $igv,
+        $total_venta,
+        $idarticulo,
+        $cantidad,
+        $precio_venta,
+        $descuento,
+        $idcontacto_tabla,
+        $forma_pago,
+        $monto_pagado,
+        $saldo_pendiente,
+        $fecha_vencimiento
+    ) {
+        global $conexion;
+
+        $idventa = intval($idventa);
+
+        if (
+            $idventa <= 0 ||
+            empty($idarticulo) ||
+            count($idarticulo) !== count($cantidad) ||
+            count($idarticulo) !== count($precio_venta) ||
+            count($idarticulo) !== count($descuento)
+        ) {
+            return false;
+        }
+
+        try {
+            $conexion->begin_transaction();
+
+            $deleteStmt = $conexion->prepare("DELETE FROM detalle_venta WHERE idventa = ?");
+
+            if (!$deleteStmt) {
+                throw new Exception("No se pudo preparar la eliminación del detalle de venta");
+            }
+
+            $deleteStmt->bind_param("i", $idventa);
+
+            if (!$deleteStmt->execute()) {
+                throw new Exception("No se pudo eliminar el detalle de venta");
+            }
+
+            $insertStmt = $conexion->prepare(
+                "INSERT INTO detalle_venta (idventa, idarticulo, cantidad, precio_venta, descuento) VALUES (?, ?, ?, ?, ?)"
+            );
+
+            if (!$insertStmt) {
+                throw new Exception("No se pudo preparar el registro del detalle de venta");
+            }
+
+            for ($i = 0; $i < count($idarticulo); $i++) {
+                $idarticuloItem = intval($idarticulo[$i]);
+                $cantidadItem = floatval($cantidad[$i]);
+                $precioItem = floatval($precio_venta[$i]);
+                $descuentoItem = floatval($descuento[$i]);
+
+                if ($idarticuloItem <= 0 || $cantidadItem <= 0 || $precioItem < 0) {
+                    throw new Exception("Datos de detalle inválidos");
+                }
+
+                $insertStmt->bind_param(
+                    "iiddd",
+                    $idventa,
+                    $idarticuloItem,
+                    $cantidadItem,
+                    $precioItem,
+                    $descuentoItem
+                );
+
+                if (!$insertStmt->execute()) {
+                    throw new Exception("No se pudo registrar el detalle de venta");
+                }
+            }
+
+            $updateStmt = $conexion->prepare(
+                "UPDATE venta SET idcliente = ?, idusuario = ?, tipo_comprobante = ?, serie_comprobante = ?, num_comprobante = ?, fecha_hora = ?, subtotal = ?, igv = ?, total_venta = ?, idvendedor = ?, forma_pago = ?, monto_pagado = ?, saldo_pendiente = ?, fecha_vencimiento = ? WHERE idventa = ?"
+            );
+
+            if (!$updateStmt) {
+                throw new Exception("No se pudo preparar la actualización de la cabecera de venta");
+            }
+
+            $updateStmt->bind_param(
+                "iissssdddisddsi",
+                $idcliente,
+                $idusuario,
+                $tipo_comprobante,
+                $serie_comprobante,
+                $num_comprobante,
+                $fecha_hora,
+                $subtotal,
+                $igv,
+                $total_venta,
+                $idcontacto_tabla,
+                $forma_pago,
+                $monto_pagado,
+                $saldo_pendiente,
+                $fecha_vencimiento,
+                $idventa
+            );
+
+            if (!$updateStmt->execute()) {
+                throw new Exception("No se pudo actualizar la cabecera de venta");
+            }
+
+            $conexion->commit();
+            return true;
+        } catch (Exception $e) {
+            $conexion->rollback();
+            return false;
+        }
+    }
+
     public function activar($idventa)
     {
         $sql="UPDATE venta SET estado='Aceptado' WHERE idventa='$idventa' ";
